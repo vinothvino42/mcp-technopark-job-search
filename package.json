@@ -2,6 +2,8 @@
   "name": "mcp-technopark-job-search",
   "version": "1.0.0",
   "description": "Model Context Protocol (MCP) server for Technopark Job Search",
+  "author": "Vinoth",
+  "license": "ISC",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -17,17 +19,15 @@
     "mcp",
     "server"
   ],
-  "author": "Vinoth",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^24.1.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "@modelcontextprotocol/inspector": "^0.16.2"
-  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "dotenv": "^17.2.1",
+    "puppeteer": "^24.15.0",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.16.2",
+    "@types/node": "^24.1.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }
