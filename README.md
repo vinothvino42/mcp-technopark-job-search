@@ -85,17 +85,6 @@ Search for jobs on Technopark by role or keyword.
 
 - `role` (string, required): The job role or keyword to search for
 
-**Example usage:**
-
-```json
-{
-  "name": "technopark-job-search",
-  "arguments": {
-    "role": "software engineer"
-  }
-}
-```
-
 **Response format:**
 
 ```json
