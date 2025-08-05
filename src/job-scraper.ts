@@ -5,7 +5,6 @@ export async function fetchJobs(url: string): Promise<
     title: string;
     company: string;
     closingDate: string;
-    postedDate: string;
   }[]
 > {
   let browser: Browser | null = null;
@@ -27,12 +26,17 @@ export async function fetchJobs(url: string): Promise<
       title: string;
       company: string;
       closingDate: string;
-      postedDate: string;
     }[] = [];
+
+    page.waitForSelector(
+      "div > div:nth-child(4) > div:nth-child(1) > div:nth-child(5)"
+    );
 
     const jobElements = await page.$$(
       "div > div:nth-child(4) > div:nth-child(1) > div:nth-child(5)"
     );
+
+    console.log("Job elements found:", jobElements.length);
 
     for (const el of jobElements) {
       const title =
@@ -41,15 +45,14 @@ export async function fetchJobs(url: string): Promise<
         (await el.$eval("h2", (el) => el.textContent?.trim() || "")) ?? "";
       const closingDate =
         (await el.$eval("p", (el) => el.textContent?.trim() || "")) ?? "";
-      const postedDate = "28-23-23";
 
       jobs.push({
         title,
         company,
         closingDate,
-        postedDate,
       });
     }
+    console.log("Jobs fetched:", jobs.length);
 
     await browser.close();
     return Promise.resolve(jobs);

@@ -1,37 +1,15 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import { fetchJobs } from "./job-scraper";
 import { Job } from "./types/job";
 import { z } from "zod";
 
-const server = new Server(
-  {
-    name: "Technopark Job Search",
-    version: "1.0.0",
-  },
-  {
-    capabilities: {
-      tools: {
-        callSchema: CallToolRequestSchema,
-      },
-    },
-  }
-);
-
-const TECHNOPARK_BASE_URL = "https://technopark.in";
-
-const JobSearchSchema = z.object({
-  role: z.string({
-    required_error: "Role is required",
-    description: "Search query for job titles",
-  }),
+const server = new McpServer({
+  name: "mcp-technopark-job-search",
+  version: "1.0.0",
 });
 
-type JobSearchInput = z.infer<typeof JobSearchSchema>;
+const TECHNOPARK_BASE_URL = "https://technopark.in";
 
 async function jobSearch(
   endpoint: string,
@@ -51,62 +29,51 @@ async function jobSearch(
   }
 }
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: "technopark-job-search",
-        description: "Search for jobs by title or keyword",
-        inputSchema: {
-          type: "object",
-          properties: {
-            role: {
-              type: "string",
-              description: "Search role",
-            },
-          },
-          required: ["role"],
-        },
-      },
-    ],
-  };
-});
+server.tool(
+  "job-search",
+  "Search for jobs by title or keyword",
+  {
+    role: z.string().describe("Enter a job title to search relevant listings"),
+  },
+  async ({ role }) => {
+    try {
+      const jobs: Job[] = await jobSearch("/job-search", {
+        search: role,
+      });
 
-server.setRequestHandler(CallToolRequestSchema, async (request, _extra) => {
-  try {
-    switch (request.params.name) {
-      case "technopark-job-search": {
-        const role = request.params.arguments?.role as string;
-        const jobs: Job[] = await jobSearch("/job-search", {
-          search: role,
-        });
-        const jobsData = JSON.stringify(jobs, null, 2);
+      if (jobs.length === 0) {
         return {
           content: [
             {
               type: "text",
-              text: jobsData,
-              mimeType: "application/json",
+              text: `Jobs not found for ${role}.`,
             },
           ],
         };
       }
-      default:
-        throw new Error("Tool not found");
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(jobs, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${
+              error instanceof Error ? error.message : "Something went wrong"
+            }`,
+          },
+        ],
+      };
     }
-  } catch (error) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: ${
-            error instanceof Error ? error.message : "Something went wrong"
-          }`,
-        },
-      ],
-    };
   }
-});
+);
 
 async function main() {
   const transport = new StdioServerTransport();
